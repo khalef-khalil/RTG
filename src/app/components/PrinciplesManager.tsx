@@ -61,7 +61,38 @@ const categories = [
 ]
 
 export default function PrinciplesManager() {
-  const [principles, setPrinciples] = useState<Principle[]>(initialPrinciples)
+  const [principles, setPrinciples] = useState<Principle[]>([])
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    fetchPrinciples()
+  }, [])
+
+  const fetchPrinciples = async () => {
+    try {
+      const response = await fetch('/api/principles')
+      if (response.ok) {
+        const data = await response.json()
+        // Convert API data to match our interface
+        const formattedPrinciples = data.map((p: any) => ({
+          id: p.id,
+          text: p.text,
+          type: p.type as 'do' | 'dont',
+          category: p.category,
+          dateAdded: new Date(p.createdAt),
+          source: p.source
+        }))
+        setPrinciples(formattedPrinciples)
+      } else {
+        setPrinciples(initialPrinciples)
+      }
+    } catch (error) {
+      console.error('Failed to fetch principles:', error)
+      setPrinciples(initialPrinciples)
+    } finally {
+      setLoading(false)
+    }
+  }
   const [filter, setFilter] = useState<'all' | 'do' | 'dont'>('all')
   const [categoryFilter, setCategoryFilter] = useState<string>('all')
   const [isAdding, setIsAdding] = useState(false)
@@ -79,35 +110,84 @@ export default function PrinciplesManager() {
     return typeMatch && categoryMatch
   })
 
-  const handleAddPrinciple = () => {
+  const handleAddPrinciple = async () => {
     if (newPrinciple.text.trim()) {
-      const principle: Principle = {
-        id: Date.now().toString(),
-        text: newPrinciple.text.trim(),
-        type: newPrinciple.type,
-        category: newPrinciple.category,
-        dateAdded: new Date(),
-        source: newPrinciple.source.trim() || undefined
+      try {
+        const response = await fetch('/api/principles', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            text: newPrinciple.text.trim(),
+            type: newPrinciple.type,
+            category: newPrinciple.category,
+            source: newPrinciple.source.trim() || null
+          })
+        })
+        
+        if (response.ok) {
+          await fetchPrinciples() // Refresh the list
+          setNewPrinciple({ text: '', type: 'do', category: 'Other', source: '' })
+          setIsAdding(false)
+        }
+      } catch (error) {
+        console.error('Failed to add principle:', error)
       }
-      setPrinciples([...principles, principle])
-      setNewPrinciple({ text: '', type: 'do', category: 'Other', source: '' })
-      setIsAdding(false)
     }
   }
 
-  const handleEditPrinciple = (id: string, updatedText: string) => {
-    setPrinciples(principles.map(p => 
-      p.id === id ? { ...p, text: updatedText } : p
-    ))
-    setEditingId(null)
+  const handleEditPrinciple = async (id: string, updatedText: string) => {
+    try {
+      const principle = principles.find(p => p.id === id)
+      if (!principle) return
+
+      const response = await fetch(`/api/principles/${id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          text: updatedText,
+          type: principle.type,
+          category: principle.category,
+          source: principle.source
+        })
+      })
+      
+      if (response.ok) {
+        await fetchPrinciples() // Refresh the list
+        setEditingId(null)
+      }
+    } catch (error) {
+      console.error('Failed to edit principle:', error)
+    }
   }
 
-  const handleDeletePrinciple = (id: string) => {
-    setPrinciples(principles.filter(p => p.id !== id))
+  const handleDeletePrinciple = async (id: string) => {
+    try {
+      const response = await fetch(`/api/principles/${id}`, {
+        method: 'DELETE'
+      })
+      
+      if (response.ok) {
+        await fetchPrinciples() // Refresh the list
+      }
+    } catch (error) {
+      console.error('Failed to delete principle:', error)
+    }
   }
 
   const doCount = principles.filter(p => p.type === 'do').length
   const dontCount = principles.filter(p => p.type === 'dont').length
+
+  if (loading) {
+    return (
+      <div className="max-w-6xl mx-auto p-6 flex items-center justify-center min-h-screen">
+        <div className="text-white text-lg">Loading principles...</div>
+      </div>
+    )
+  }
 
   return (
     <div className="max-w-6xl mx-auto p-6 space-y-6">

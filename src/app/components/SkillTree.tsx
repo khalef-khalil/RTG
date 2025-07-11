@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { TransformWrapper, TransformComponent } from 'react-zoom-pan-pinch'
 import { ZoomIn, ZoomOut, RotateCcw, Play, Target } from 'lucide-react'
 
@@ -51,8 +51,43 @@ const categoryColors = {
 }
 
 export default function SkillTree() {
-  const [skills, setSkills] = useState<Skill[]>(initialSkills)
+  const [skills, setSkills] = useState<Skill[]>([])
   const [selectedSkill, setSelectedSkill] = useState<Skill | null>(null)
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    fetchSkills()
+  }, [])
+
+  const fetchSkills = async () => {
+    try {
+      const response = await fetch('/api/skills')
+      if (response.ok) {
+        const data = await response.json()
+        // Convert API data to match our interface
+        const formattedSkills = data.map((skill: any) => ({
+          id: skill.id,
+          name: skill.name,
+          description: skill.description,
+          x: skill.x,
+          y: skill.y,
+          completed: skill.completed,
+          locked: false, // Will be calculated
+          prerequisites: skill.prerequisites ? skill.prerequisites.map((p: any) => p.id) : [],
+          category: skill.category,
+          challenge: skill.challenge
+        }))
+        setSkills(formattedSkills)
+      } else {
+        setSkills(initialSkills)
+      }
+    } catch (error) {
+      console.error('Failed to fetch skills:', error)
+      setSkills(initialSkills)
+    } finally {
+      setLoading(false)
+    }
+  }
 
   const handleSkillClick = (skill: Skill) => {
     setSelectedSkill(skill)
@@ -91,6 +126,14 @@ export default function SkillTree() {
         )
       })
     ).flat()
+  }
+
+  if (loading) {
+    return (
+      <div className="h-full w-full flex items-center justify-center">
+        <div className="text-white text-lg">Loading skill tree...</div>
+      </div>
+    )
   }
 
   return (
@@ -156,11 +199,11 @@ export default function SkillTree() {
               wrapperClass="w-full h-full"
               contentClass="w-full h-full flex items-center justify-center"
             >
-              <div className="relative" style={{ width: '2000px', height: '2000px' }}>
+              <div className="relative" style={{ width: '3000px', height: '3000px' }}>
                 <svg
-                  width="2000"
-                  height="2000"
-                  viewBox="-1000 -1000 2000 2000"
+                  width="3000"
+                  height="3000"
+                  viewBox="-1500 -1500 3000 3000"
                   className="absolute inset-0"
                 >
                   {/* Grid pattern */}
@@ -181,10 +224,10 @@ export default function SkillTree() {
                     </pattern>
                   </defs>
                   <rect
-                    x="-1000"
-                    y="-1000"
-                    width="2000"
-                    height="2000"
+                    x="-1500"
+                    y="-1500"
+                    width="3000"
+                    height="3000"
                     fill="url(#grid)"
                   />
                   
@@ -204,7 +247,7 @@ export default function SkillTree() {
                           stroke={selectedSkill?.id === skill.id ? '#fbbf24' : '#1f2937'}
                           strokeWidth="3"
                           className={`cursor-pointer transition-all duration-300 ${
-                            unlocked ? 'hover:scale-110' : ''
+                            unlocked ? 'hover:fill-purple-400' : ''
                           }`}
                           onClick={() => unlocked && handleSkillClick(skill)}
                         />

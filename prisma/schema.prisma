@@ -68,3 +68,16 @@ model Focus {
   
   @@map("focus")
 }
+
+model System {
+  id          String   @id @default(cuid())
+  trigger     String   // "When I wake up", "When I feel overwhelmed"
+  action      String   // "I drink water", "I take 3 deep breaths"
+  outcome     String   // "I feel energized", "I regain focus"
+  category    String   // "Morning", "Evening", "Work", "Stress", "Health"
+  source      String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  @@map("systems")
+}

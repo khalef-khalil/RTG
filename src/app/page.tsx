@@ -10,10 +10,10 @@ export default function Home() {
             Road to Greatness
           </h1>
           <p className="text-xl text-gray-300 max-w-2xl mx-auto">
-            Your journey to personal excellence starts here. Track your challenges, 
-            learn from principles, and build the life you've always wanted.
+            Your journey to personal excellence starts here. Take on challenges, clarify your focus, 
+            build automated systems, and live by proven principles.
           </p>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center items-center mt-8">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 justify-center items-center mt-8 max-w-4xl mx-auto">
             <a
               href="/challenges"
               className="flex items-center space-x-2 px-6 py-3 bg-purple-600 hover:bg-purple-700 text-white rounded-lg transition-colors text-lg"
@@ -25,6 +25,12 @@ export default function Home() {
               className="flex items-center space-x-2 px-6 py-3 bg-cyan-600 hover:bg-cyan-700 text-white rounded-lg transition-colors text-lg"
             >
               <span>Clarify Your Focus</span>
+            </a>
+            <a
+              href="/systems"
+              className="flex items-center space-x-2 px-6 py-3 bg-amber-600 hover:bg-amber-700 text-white rounded-lg transition-colors text-lg"
+            >
+              <span>Build Your Systems</span>
             </a>
             <a
               href="/principles"

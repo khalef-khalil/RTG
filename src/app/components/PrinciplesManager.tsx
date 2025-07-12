@@ -147,7 +147,7 @@ export default function PrinciplesManager() {
     }
   }
 
-  const handleEditPrinciple = async (id: string, updatedText: string) => {
+  const handleEditPrinciple = async (id: string, updatedData: Partial<Principle>) => {
     try {
       const principle = principles.find(p => p.id === id)
       if (!principle) return
@@ -158,11 +158,11 @@ export default function PrinciplesManager() {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          text: updatedText,
-          type: principle.type,
-          category: principle.category,
-          source: principle.source,
-          quote: principle.quote
+          text: updatedData.text || principle.text,
+          type: updatedData.type || principle.type,
+          category: updatedData.category || principle.category,
+          source: updatedData.source || principle.source,
+          quote: updatedData.quote || principle.quote
         })
       })
       
@@ -402,7 +402,7 @@ export default function PrinciplesManager() {
                 key={principle.id}
                 principle={principle}
                 isEditing={editingId === principle.id}
-                onEdit={(text) => handleEditPrinciple(principle.id, text)}
+                onEdit={(updatedData) => handleEditPrinciple(principle.id, updatedData)}
                 onDelete={() => handleDeletePrinciple(principle.id)}
                 onStartEdit={() => setEditingId(principle.id)}
                 onCancelEdit={() => setEditingId(null)}
@@ -422,7 +422,7 @@ export default function PrinciplesManager() {
                 key={principle.id}
                 principle={principle}
                 isEditing={editingId === principle.id}
-                onEdit={(text) => handleEditPrinciple(principle.id, text)}
+                onEdit={(updatedData) => handleEditPrinciple(principle.id, updatedData)}
                 onDelete={() => handleDeletePrinciple(principle.id)}
                 onStartEdit={() => setEditingId(principle.id)}
                 onCancelEdit={() => setEditingId(null)}
@@ -437,7 +437,7 @@ export default function PrinciplesManager() {
               key={principle.id}
               principle={principle}
               isEditing={editingId === principle.id}
-              onEdit={(text) => handleEditPrinciple(principle.id, text)}
+              onEdit={(updatedData) => handleEditPrinciple(principle.id, updatedData)}
               onDelete={() => handleDeletePrinciple(principle.id)}
               onStartEdit={() => setEditingId(principle.id)}
               onCancelEdit={() => setEditingId(null)}
@@ -458,18 +458,24 @@ export default function PrinciplesManager() {
 interface PrincipleCardProps {
   principle: Principle
   isEditing: boolean
-  onEdit: (text: string) => void
+  onEdit: (updatedData: Partial<Principle>) => void
   onDelete: () => void
   onStartEdit: () => void
   onCancelEdit: () => void
 }
 
 function PrincipleCard({ principle, isEditing, onEdit, onDelete, onStartEdit, onCancelEdit }: PrincipleCardProps) {
-  const [editText, setEditText] = useState(principle.text)
+  const [editData, setEditData] = useState({
+    text: principle.text,
+    type: principle.type,
+    category: principle.category,
+    source: principle.source || '',
+    quote: principle.quote || ''
+  })
 
   const handleSave = () => {
-    if (editText.trim()) {
-      onEdit(editText.trim())
+    if (editData.text.trim()) {
+      onEdit(editData)
     }
   }
 
@@ -513,12 +519,68 @@ function PrincipleCard({ principle, isEditing, onEdit, onDelete, onStartEdit, on
 
       {isEditing ? (
         <div className="space-y-3">
+          <div className="flex space-x-4">
+            <button
+              onClick={() => setEditData({ ...editData, type: 'do' })}
+              className={`flex items-center space-x-2 px-3 py-1 rounded text-sm transition-colors ${
+                editData.type === 'do' 
+                  ? 'bg-green-600 text-white' 
+                  : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
+              }`}
+            >
+              <ThumbsUp size={14} />
+              <span>Do</span>
+            </button>
+            <button
+              onClick={() => setEditData({ ...editData, type: 'dont' })}
+              className={`flex items-center space-x-2 px-3 py-1 rounded text-sm transition-colors ${
+                editData.type === 'dont' 
+                  ? 'bg-red-600 text-white' 
+                  : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
+              }`}
+            >
+              <ThumbsDown size={14} />
+              <span>Don't</span>
+            </button>
+          </div>
+
           <textarea
-            value={editText}
-            onChange={(e) => setEditText(e.target.value)}
+            value={editData.text}
+            onChange={(e) => setEditData({ ...editData, text: e.target.value })}
+            placeholder="Write your principle here..."
             className="w-full p-2 rounded bg-gray-700 text-white border border-gray-600 focus:outline-none focus:ring-2 focus:ring-emerald-500 resize-none"
             rows={3}
           />
+
+          <div className="flex space-x-4">
+            <select
+              value={editData.category}
+              onChange={(e) => setEditData({ ...editData, category: e.target.value })}
+              className="px-3 py-2 rounded bg-gray-700 text-white border border-gray-600 focus:outline-none focus:ring-2 focus:ring-emerald-500 text-sm"
+            >
+              {categories.map(category => (
+                <option key={category} value={category} className="bg-gray-700 text-white">
+                  {category}
+                </option>
+              ))}
+            </select>
+
+            <input
+              value={editData.source}
+              onChange={(e) => setEditData({ ...editData, source: e.target.value })}
+              placeholder="Source (optional)"
+              className="flex-1 px-3 py-2 rounded bg-gray-700 text-white placeholder-gray-400 border border-gray-600 focus:outline-none focus:ring-2 focus:ring-emerald-500 text-sm"
+            />
+          </div>
+
+          <textarea
+            value={editData.quote}
+            onChange={(e) => setEditData({ ...editData, quote: e.target.value })}
+            placeholder="Quote (optional) - Add a relevant quote that supports this principle..."
+            className="w-full p-2 rounded bg-gray-700 text-white placeholder-gray-400 border border-gray-600 focus:outline-none focus:ring-2 focus:ring-emerald-500 resize-none text-sm"
+            rows={2}
+          />
+
           <div className="flex space-x-2">
             <button
               onClick={handleSave}
@@ -529,7 +591,13 @@ function PrincipleCard({ principle, isEditing, onEdit, onDelete, onStartEdit, on
             </button>
             <button
               onClick={() => {
-                setEditText(principle.text)
+                setEditData({
+                  text: principle.text,
+                  type: principle.type,
+                  category: principle.category,
+                  source: principle.source || '',
+                  quote: principle.quote || ''
+                })
                 onCancelEdit()
               }}
               className="flex items-center space-x-1 px-3 py-1 bg-gray-600 hover:bg-gray-700 text-white rounded text-sm transition-colors"

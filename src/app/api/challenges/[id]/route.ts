@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server'
-import { db } from '@/lib/db'
+import { supabaseAdmin } from '@/lib/supabase'
 
 export async function GET(
   request: Request,
@@ -7,18 +7,20 @@ export async function GET(
 ) {
   try {
     const { id } = await params
-    const challenge = await db.challenge.findUnique({
-      where: { id }
-    })
+    const { data: challenge, error } = await supabaseAdmin
+      .from('challenges')
+      .select('*')
+      .eq('id', id)
+      .single()
 
-    if (!challenge) {
+    if (error) {
+      console.error('Supabase error:', error)
       return NextResponse.json({ error: 'Challenge not found' }, { status: 404 })
     }
 
     return NextResponse.json(challenge)
   } catch (error) {
     console.error('Error in API:', error)
-    console.error('Error fetching challenge:', error)
     return NextResponse.json({ error: 'Failed to fetch challenge' }, { status: 500 })
   }
 }
@@ -32,25 +34,32 @@ export async function PUT(
     const body = await request.json()
     const { title, description, type, targetValue, deadline, timeLimit, priority, category, checklistItems } = body
 
-    const challenge = await db.challenge.update({
-      where: { id },
-      data: {
-        title: title ?? undefined,
-        description: description ?? undefined,
-        type: type ?? undefined,
-        targetValue: targetValue ?? undefined,
-        deadline: deadline ? new Date(deadline) : undefined,
-        timeLimit: timeLimit ?? undefined,
-        priority: priority ?? undefined,
-        category: category ?? undefined,
-        checklistItems: checklistItems ?? undefined
-      }
-    })
+    const updateData: any = {}
+    if (title !== undefined) updateData.title = title
+    if (description !== undefined) updateData.description = description
+    if (type !== undefined) updateData.type = type
+    if (targetValue !== undefined) updateData.targetValue = targetValue
+    if (deadline !== undefined) updateData.deadline = deadline ? new Date(deadline) : null
+    if (timeLimit !== undefined) updateData.timeLimit = timeLimit
+    if (priority !== undefined) updateData.priority = priority
+    if (category !== undefined) updateData.category = category
+    if (checklistItems !== undefined) updateData.checklistItems = checklistItems
+
+    const { data: challenge, error } = await supabaseAdmin
+      .from('challenges')
+      .update(updateData)
+      .eq('id', id)
+      .select()
+      .single()
+
+    if (error) {
+      console.error('Supabase error:', error)
+      return NextResponse.json({ error: 'Failed to update challenge' }, { status: 500 })
+    }
 
     return NextResponse.json(challenge)
   } catch (error) {
     console.error('Error in API:', error)
-    console.error('Error updating challenge:', error)
     return NextResponse.json({ error: 'Failed to update challenge' }, { status: 500 })
   }
 }
@@ -64,22 +73,29 @@ export async function PATCH(
     const body = await request.json()
     const { completed, progress, completedAt, biggestObstacle, improvement, pushRating } = body
 
-    const challenge = await db.challenge.update({
-      where: { id },
-      data: {
-        completed: completed ?? undefined,
-        progress: progress ?? undefined,
-        completedAt: completed ? new Date(completedAt || Date.now()) : undefined,
-        biggestObstacle: biggestObstacle ?? undefined,
-        improvement: improvement ?? undefined,
-        pushRating: pushRating ?? undefined
-      }
-    })
+    const updateData: any = {}
+    if (completed !== undefined) updateData.completed = completed
+    if (progress !== undefined) updateData.progress = progress
+    if (completedAt !== undefined) updateData.completedAt = completed ? new Date(completedAt || Date.now()) : null
+    if (biggestObstacle !== undefined) updateData.biggestObstacle = biggestObstacle
+    if (improvement !== undefined) updateData.improvement = improvement
+    if (pushRating !== undefined) updateData.pushRating = pushRating
+
+    const { data: challenge, error } = await supabaseAdmin
+      .from('challenges')
+      .update(updateData)
+      .eq('id', id)
+      .select()
+      .single()
+
+    if (error) {
+      console.error('Supabase error:', error)
+      return NextResponse.json({ error: 'Failed to update challenge' }, { status: 500 })
+    }
 
     return NextResponse.json(challenge)
   } catch (error) {
     console.error('Error in API:', error)
-    console.error('Error updating challenge:', error)
     return NextResponse.json({ error: 'Failed to update challenge' }, { status: 500 })
   }
 }
@@ -91,14 +107,19 @@ export async function DELETE(
   try {
     const { id } = await params
     
-    await db.challenge.delete({
-      where: { id }
-    })
+    const { error } = await supabaseAdmin
+      .from('challenges')
+      .delete()
+      .eq('id', id)
+
+    if (error) {
+      console.error('Supabase error:', error)
+      return NextResponse.json({ error: 'Failed to delete challenge' }, { status: 500 })
+    }
 
     return NextResponse.json({ message: 'Challenge deleted successfully' })
   } catch (error) {
     console.error('Error in API:', error)
-    console.error('Error deleting challenge:', error)
     return NextResponse.json({ error: 'Failed to delete challenge' }, { status: 500 })
   }
 } 

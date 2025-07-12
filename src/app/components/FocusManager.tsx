@@ -28,8 +28,9 @@ export default function FocusManager() {
   const fetchFocusItems = async () => {
     try {
       const response = await fetch('/api/focus')
-      if (response.ok) {
-        const data = await response.json()
+      const data = await response.json()
+      
+      if (response.ok && Array.isArray(data)) {
         const formattedItems = data.map((item: { id: string; text: string; type: string; category: string; createdAt: string; source?: string }) => ({
           id: item.id,
           text: item.text,
@@ -39,9 +40,13 @@ export default function FocusManager() {
           source: item.source
         }))
         setFocusItems(formattedItems)
+      } else {
+        console.error('Error fetching focus items:', data.error || 'Invalid response format')
+        setFocusItems([])
       }
     } catch (error) {
       console.error('Failed to fetch focus items:', error)
+      setFocusItems([])
     } finally {
       setLoading(false)
     }

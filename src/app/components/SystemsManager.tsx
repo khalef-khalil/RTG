@@ -29,8 +29,9 @@ export default function SystemsManager() {
   const fetchSystems = async () => {
     try {
       const response = await fetch('/api/systems')
-      if (response.ok) {
-        const data = await response.json()
+      const data = await response.json()
+      
+      if (response.ok && Array.isArray(data)) {
         const formattedSystems = data.map((system: { id: string; trigger: string; action: string; outcome: string; category: string; createdAt: string; source?: string }) => ({
           id: system.id,
           trigger: system.trigger,
@@ -41,9 +42,13 @@ export default function SystemsManager() {
           source: system.source
         }))
         setSystems(formattedSystems)
+      } else {
+        console.error('Error fetching systems:', data.error || 'Invalid response format')
+        setSystems([])
       }
     } catch (error) {
       console.error('Failed to fetch systems:', error)
+      setSystems([])
     } finally {
       setLoading(false)
     }

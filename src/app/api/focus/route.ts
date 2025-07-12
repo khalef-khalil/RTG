@@ -1,15 +1,21 @@
 import { NextResponse } from 'next/server'
-import { db } from '@/lib/db'
+import { supabaseAdmin } from '@/lib/supabase'
 
 export async function GET() {
   try {
-    const focusItems = await db.focus.findMany({
-      orderBy: { createdAt: 'desc' }
-    })
-    return NextResponse.json(focusItems)
+    const { data: focusItems, error } = await supabaseAdmin
+      .from('focus')
+      .select('*')
+      .order('createdAt', { ascending: false })
+
+    if (error) {
+      console.error('Supabase error:', error)
+      return NextResponse.json({ error: 'Failed to fetch focus items' }, { status: 500 })
+    }
+
+    return NextResponse.json(focusItems || [])
   } catch (error) {
     console.error('Error in API:', error)
-    console.error('Error fetching focus items:', error)
     return NextResponse.json({ error: 'Failed to fetch focus items' }, { status: 500 })
   }
 }
@@ -17,18 +23,25 @@ export async function GET() {
 export async function POST(request: Request) {
   try {
     const body = await request.json()
-    const focusItem = await db.focus.create({
-      data: {
+    const { data: focusItem, error } = await supabaseAdmin
+      .from('focus')
+      .insert({
         text: body.text,
         type: body.type,
         category: body.category,
         source: body.source
-      }
-    })
+      })
+      .select()
+      .single()
+
+    if (error) {
+      console.error('Supabase error:', error)
+      return NextResponse.json({ error: 'Failed to create focus item' }, { status: 500 })
+    }
+
     return NextResponse.json(focusItem)
   } catch (error) {
     console.error('Error in API:', error)
-    console.error('Error creating focus item:', error)
     return NextResponse.json({ error: 'Failed to create focus item' }, { status: 500 })
   }
 } 

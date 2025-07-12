@@ -1,20 +1,23 @@
 import { NextResponse } from 'next/server'
-import { db } from '@/lib/db'
+import { supabaseAdmin } from '@/lib/supabase'
 
 export async function GET() {
   try {
-    const challenges = await db.challenge.findMany({
-      orderBy: [
-        { completed: 'asc' },
-        { deadline: 'asc' },
-        { priority: 'desc' }
-      ]
-    })
+    const { data: challenges, error } = await supabaseAdmin
+      .from('challenges')
+      .select('*')
+      .order('completed', { ascending: true })
+      .order('deadline', { ascending: true })
+      .order('priority', { ascending: false })
 
-    return NextResponse.json(challenges)
+    if (error) {
+      console.error('Supabase error:', error)
+      return NextResponse.json({ error: 'Failed to fetch challenges' }, { status: 500 })
+    }
+
+    return NextResponse.json(challenges || [])
   } catch (error) {
     console.error('Error in API:', error)
-    console.error('Error fetching challenges:', error)
     return NextResponse.json({ error: 'Failed to fetch challenges' }, { status: 500 })
   }
 }
@@ -24,8 +27,9 @@ export async function POST(request: Request) {
     const body = await request.json()
     const { title, description, type, targetValue, deadline, timeLimit, priority, category, checklistItems } = body
 
-    const challenge = await db.challenge.create({
-      data: {
+    const { data: challenge, error } = await supabaseAdmin
+      .from('challenges')
+      .insert({
         title,
         description,
         type,
@@ -35,13 +39,18 @@ export async function POST(request: Request) {
         priority: priority || 'medium',
         category,
         checklistItems
-      }
-    })
+      })
+      .select()
+      .single()
+
+    if (error) {
+      console.error('Supabase error:', error)
+      return NextResponse.json({ error: 'Failed to create challenge' }, { status: 500 })
+    }
 
     return NextResponse.json(challenge)
   } catch (error) {
     console.error('Error in API:', error)
-    console.error('Error creating challenge:', error)
     return NextResponse.json({ error: 'Failed to create challenge' }, { status: 500 })
   }
 } 

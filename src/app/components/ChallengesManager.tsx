@@ -51,9 +51,16 @@ export default function ChallengesManager() {
     try {
       const response = await fetch('/api/challenges')
       const data = await response.json()
-      setChallenges(data)
+      
+      if (response.ok && Array.isArray(data)) {
+        setChallenges(data)
+      } else {
+        console.error('Error fetching challenges:', data.error || 'Invalid response format')
+        setChallenges([])
+      }
     } catch (error) {
       console.error('Error fetching challenges:', error)
+      setChallenges([])
     } finally {
       setLoading(false)
     }

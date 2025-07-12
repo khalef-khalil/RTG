@@ -71,8 +71,9 @@ export default function PrinciplesManager() {
   const fetchPrinciples = async () => {
     try {
       const response = await fetch('/api/principles')
-      if (response.ok) {
-        const data = await response.json()
+      const data = await response.json()
+      
+      if (response.ok && Array.isArray(data)) {
         // Convert API data to match our interface
         const formattedPrinciples = data.map((p: { id: string; text: string; type: string; category: string; createdAt: string; source?: string }) => ({
           id: p.id,
@@ -84,6 +85,7 @@ export default function PrinciplesManager() {
         }))
         setPrinciples(formattedPrinciples)
       } else {
+        console.error('Error fetching principles:', data.error || 'Invalid response format')
         setPrinciples(initialPrinciples)
       }
     } catch (error) {

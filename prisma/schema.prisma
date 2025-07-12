@@ -10,47 +10,29 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model Skill {
-  id           String   @id @default(cuid())
-  name         String   // e.g., "Communication"
-  baseSkill    String   // e.g., "communication" (for grouping levels)
-  level        Int      @default(1) // I, II, III, IV, V etc.
-  description  String
-  x            Float
-  y            Float
-  completed    Boolean  @default(false)
-  category     String
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
-  
-  // Challenge details
-  challenge    Challenge?
-  
-  // Prerequisites relationship - many to many
-  prerequisites     Skill[] @relation("SkillPrerequisites")
-  dependents        Skill[] @relation("SkillPrerequisites")
-  
-  @@map("skills")
-}
-
 model Challenge {
   id              String   @id @default(cuid())
-  skillId         String   @unique
-  skill           Skill    @relation(fields: [skillId], references: [id], onDelete: Cascade)
   
   title           String   // "Complete 5 meaningful conversations"
   description     String   // Detailed explanation
   type            String   // "count", "time", "binary", "checklist"
   targetValue     Int?     // For count/time challenges
-  timeLimit       Int?     // Hours to complete (24 = 1 day)
   
-  // Completion criteria
+  // Deadline management
+  deadline        DateTime? // When the challenge should be completed
+  timeLimit       Int?     // Hours to complete (optional, for time-based challenges)
+  
+  // Completion tracking
   completed       Boolean  @default(false)
   completedAt     DateTime?
   progress        Int      @default(0) // Current progress
   
   // Checklist items (JSON array for checklist type)
   checklistItems  String?  // JSON string of checklist items
+  
+  // Priority and category
+  priority        String   @default("medium") // "low", "medium", "high"
+  category        String   // "personal", "work", "health", "learning", etc.
   
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
@@ -68,12 +50,4 @@ model Principle {
   updatedAt   DateTime @updatedAt
   
   @@map("principles")
-}
-
-model UserProgress {
-  id          String   @id @default(cuid())
-  skillId     String
-  completedAt DateTime @default(now())
-  
-  @@map("user_progress")
 }

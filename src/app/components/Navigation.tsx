@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { TreePine, BookOpen } from 'lucide-react'
+import { Target, BookOpen } from 'lucide-react'
 
 export default function Navigation() {
   const pathname = usePathname()
@@ -26,8 +26,8 @@ export default function Navigation() {
                   : 'text-gray-300 hover:bg-white/10 hover:text-white'
               }`}
             >
-              <TreePine size={20} />
-              <span>Skill Tree</span>
+              <Target size={20} />
+              <span>Challenges</span>
             </Link>
             
             <Link

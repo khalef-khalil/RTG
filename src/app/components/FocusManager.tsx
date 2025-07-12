@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { Plus, Trash2, Edit3, Check, X, Focus, Zap } from 'lucide-react'
+import { Plus, Trash2, Edit3, Check, X, Zap } from 'lucide-react'
 
 interface FocusItem {
   id: string
@@ -30,7 +30,7 @@ export default function FocusManager() {
       const response = await fetch('/api/focus')
       if (response.ok) {
         const data = await response.json()
-        const formattedItems = data.map((item: any) => ({
+        const formattedItems = data.map((item: { id: string; text: string; type: string; category: string; createdAt: string; source?: string }) => ({
           id: item.id,
           text: item.text,
           type: item.type as 'matters' | 'doesnt_matter',

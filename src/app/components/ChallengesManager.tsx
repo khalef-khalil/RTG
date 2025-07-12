@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { Plus, Trash2, Edit3, Check, X, Calendar, Clock, Target, Play, AlertCircle } from 'lucide-react'
+import { Plus, Trash2, Edit3, Check, X, Calendar, Clock, Target } from 'lucide-react'
 
 interface Challenge {
   id: string
@@ -228,7 +228,7 @@ export default function ChallengesManager() {
   })
 
   const categories = [...new Set(challenges.map(c => c.category))]
-  const activeChallenges = challenges.filter(c => !c.completed)
+  // const activeChallenges = challenges.filter(c => !c.completed)
   const completedChallenges = challenges.filter(c => c.completed)
   const inProgressChallenges = challenges.filter(c => !c.completed && c.progress > 0)
   const overdueChallenges = challenges.filter(c => !c.completed && c.deadline && getDaysUntilDeadline(c.deadline)! < 0)

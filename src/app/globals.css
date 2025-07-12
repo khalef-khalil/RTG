@@ -77,19 +77,6 @@ select:focus {
   .principles-grid {
     grid-template-columns: 1fr;
   }
-  
-  .navigation-title {
-    font-size: 1.25rem;
-  }
-  
-  .navigation-links {
-    gap: 0.25rem;
-  }
-  
-  .navigation-link {
-    padding: 0.5rem 0.75rem;
-    font-size: 0.875rem;
-  }
 }
 
 /* Animations */

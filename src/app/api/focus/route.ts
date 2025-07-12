@@ -8,6 +8,8 @@ export async function GET() {
     })
     return NextResponse.json(focusItems)
   } catch (error) {
+    console.error('Error in API:', error)
+    console.error('Error fetching focus items:', error)
     return NextResponse.json({ error: 'Failed to fetch focus items' }, { status: 500 })
   }
 }
@@ -25,6 +27,8 @@ export async function POST(request: Request) {
     })
     return NextResponse.json(focusItem)
   } catch (error) {
+    console.error('Error in API:', error)
+    console.error('Error creating focus item:', error)
     return NextResponse.json({ error: 'Failed to create focus item' }, { status: 500 })
   }
 } 

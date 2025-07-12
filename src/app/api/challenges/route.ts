@@ -13,6 +13,7 @@ export async function GET() {
 
     return NextResponse.json(challenges)
   } catch (error) {
+    console.error('Error in API:', error)
     console.error('Error fetching challenges:', error)
     return NextResponse.json({ error: 'Failed to fetch challenges' }, { status: 500 })
   }
@@ -39,6 +40,7 @@ export async function POST(request: Request) {
 
     return NextResponse.json(challenge)
   } catch (error) {
+    console.error('Error in API:', error)
     console.error('Error creating challenge:', error)
     return NextResponse.json({ error: 'Failed to create challenge' }, { status: 500 })
   }

@@ -31,7 +31,7 @@ const initialPrinciples: Principle[] = [
   },
   {
     id: '3',
-    text: 'Never make important decisions when you\'re emotional',
+    text: 'Never make important decisions when you&apos;re emotional',
     type: 'dont',
     category: 'Decision Making',
     dateAdded: new Date('2024-01-03'),
@@ -74,7 +74,7 @@ export default function PrinciplesManager() {
       if (response.ok) {
         const data = await response.json()
         // Convert API data to match our interface
-        const formattedPrinciples = data.map((p: any) => ({
+        const formattedPrinciples = data.map((p: { id: string; text: string; type: string; category: string; createdAt: string; source?: string }) => ({
           id: p.id,
           text: p.text,
           type: p.type as 'do' | 'dont',

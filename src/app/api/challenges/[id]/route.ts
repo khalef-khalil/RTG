@@ -17,6 +17,8 @@ export async function GET(
 
     return NextResponse.json(challenge)
   } catch (error) {
+    console.error('Error in API:', error)
+    console.error('Error fetching challenge:', error)
     return NextResponse.json({ error: 'Failed to fetch challenge' }, { status: 500 })
   }
 }
@@ -47,6 +49,7 @@ export async function PUT(
 
     return NextResponse.json(challenge)
   } catch (error) {
+    console.error('Error in API:', error)
     console.error('Error updating challenge:', error)
     return NextResponse.json({ error: 'Failed to update challenge' }, { status: 500 })
   }
@@ -75,6 +78,7 @@ export async function PATCH(
 
     return NextResponse.json(challenge)
   } catch (error) {
+    console.error('Error in API:', error)
     console.error('Error updating challenge:', error)
     return NextResponse.json({ error: 'Failed to update challenge' }, { status: 500 })
   }
@@ -93,6 +97,7 @@ export async function DELETE(
 
     return NextResponse.json({ message: 'Challenge deleted successfully' })
   } catch (error) {
+    console.error('Error in API:', error)
     console.error('Error deleting challenge:', error)
     return NextResponse.json({ error: 'Failed to delete challenge' }, { status: 500 })
   }

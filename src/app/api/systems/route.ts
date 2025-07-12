@@ -8,6 +8,7 @@ export async function GET() {
     })
     return NextResponse.json(systems)
   } catch (error) {
+    console.error('Error in API:', error)
     return NextResponse.json({ error: 'Failed to fetch systems' }, { status: 500 })
   }
 }
@@ -26,6 +27,7 @@ export async function POST(request: Request) {
     })
     return NextResponse.json(system)
   } catch (error) {
+    console.error('Error in API:', error)
     return NextResponse.json({ error: 'Failed to create system' }, { status: 500 })
   }
 } 

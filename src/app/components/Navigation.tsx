@@ -18,10 +18,10 @@ export default function Navigation() {
   }
 
   const navLinks = [
-    { href: '/challenges', icon: Target, label: 'Challenges' },
-    { href: '/focus', icon: Zap, label: 'Focus' },
-    { href: '/systems', icon: Settings, label: 'Systems' },
-    { href: '/principles', icon: BookOpen, label: 'Principles' },
+    { href: '/challenges', icon: Target, label: 'Challenges', activeColor: 'bg-purple-600', hoverColor: 'hover:bg-purple-700' },
+    { href: '/focus', icon: Zap, label: 'Focus', activeColor: 'bg-cyan-600', hoverColor: 'hover:bg-cyan-700' },
+    { href: '/systems', icon: Settings, label: 'Systems', activeColor: 'bg-amber-600', hoverColor: 'hover:bg-amber-700' },
+    { href: '/principles', icon: BookOpen, label: 'Principles', activeColor: 'bg-emerald-600', hoverColor: 'hover:bg-emerald-700' },
   ]
 
   return (
@@ -30,9 +30,9 @@ export default function Navigation() {
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
           <div className="flex items-center space-x-2">
-            <div className="text-xl sm:text-2xl font-bold bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent">
+            <Link href="/" className="text-xl sm:text-2xl font-bold bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent hover:from-purple-300 hover:to-pink-300 transition-all duration-200 cursor-pointer">
               Road to Greatness
-            </div>
+            </Link>
           </div>
           
           {/* Desktop Navigation */}
@@ -45,8 +45,8 @@ export default function Navigation() {
                   href={link.href}
                   className={`flex items-center space-x-2 px-4 py-2 rounded-lg transition-all duration-200 ${
                     pathname === link.href 
-                      ? 'bg-purple-600 text-white shadow-lg' 
-                      : 'text-gray-300 hover:bg-white/10 hover:text-white'
+                      ? `${link.activeColor} text-white shadow-lg` 
+                      : `text-gray-300 hover:bg-white/10 hover:text-white ${link.hoverColor}`
                   }`}
                 >
                   <Icon size={20} />
@@ -81,7 +81,7 @@ export default function Navigation() {
                     onClick={closeMobileMenu}
                     className={`flex items-center space-x-3 px-3 py-3 rounded-lg transition-all duration-200 ${
                       pathname === link.href 
-                        ? 'bg-purple-600 text-white shadow-lg' 
+                        ? `${link.activeColor} text-white shadow-lg` 
                         : 'text-gray-300 hover:bg-white/10 hover:text-white'
                     }`}
                   >

@@ -31,6 +31,8 @@ interface Principle {
   type: string
   category: string
   source?: string
+  quote?: string
+  description?: string
   createdAt: string
   updatedAt: string
 }
@@ -41,6 +43,7 @@ interface FocusItem {
   type: string
   category: string
   source?: string
+  description?: string
   createdAt: string
   updatedAt: string
 }
@@ -96,6 +99,26 @@ export default function Home() {
     }
   }
 
+  const calculateProgress = (challenge: Challenge) => {
+    if (challenge.type === 'checklist' && challenge.checklistItems) {
+      try {
+        const items = JSON.parse(challenge.checklistItems)
+        if (Array.isArray(items)) {
+          if (items.length > 0 && typeof items[0] === 'object' && 'text' in items[0]) {
+            // New format: array of objects with text and checked properties
+            return items.filter((item: any) => item.checked).length
+          } else {
+            // Old format: array of strings - use progress from database
+            return challenge.progress
+          }
+        }
+      } catch (error) {
+        console.error('Error parsing checklist items:', error)
+      }
+    }
+    return challenge.progress
+  }
+
   const createExportText = (challenges: Challenge[], principles: Principle[], focusItems: FocusItem[], systems: System[]) => {
     const completedChallenges = challenges.filter(c => c.completed)
     const activeChallenges = challenges.filter(c => !c.completed)
@@ -124,7 +147,7 @@ CHALLENGES DATA
 ACTIVE CHALLENGES (${activeChallenges.length}):
 ${activeChallenges.map(c => `- ${c.title} (${c.type}, ${c.priority} priority, ${c.category})
   Description: ${c.description}
-  Progress: ${c.progress}${c.targetValue ? `/${c.targetValue}` : ''}
+  Progress: ${calculateProgress(c)}${c.targetValue ? `/${c.targetValue}` : ''}${c.type === 'checklist' && c.checklistItems ? ` (${calculateProgress(c)}/${JSON.parse(c.checklistItems).length} items)` : ''}
   ${c.deadline ? `Deadline: ${new Date(c.deadline).toLocaleDateString()}` : 'No deadline'}
 `).join('\n')}
 
@@ -148,10 +171,10 @@ PRINCIPLES DATA
 LIFE PRINCIPLES (${principles.length} total):
 
 DO'S (${principles.filter(p => p.type === 'do').length}):
-${principles.filter(p => p.type === 'do').map(p => `- ${p.text} (${p.category})${p.source ? ` - Source: ${p.source}` : ''}`).join('\n')}
+${principles.filter(p => p.type === 'do').map(p => `- ${p.text} (${p.category})${p.source ? ` - Source: ${p.source}` : ''}${p.quote ? `\n  Quote: "${p.quote}"` : ''}${p.description ? `\n  Description: ${p.description}` : ''}`).join('\n')}
 
 DON'TS (${principles.filter(p => p.type === 'dont').length}):
-${principles.filter(p => p.type === 'dont').map(p => `- ${p.text} (${p.category})${p.source ? ` - Source: ${p.source}` : ''}`).join('\n')}
+${principles.filter(p => p.type === 'dont').map(p => `- ${p.text} (${p.category})${p.source ? ` - Source: ${p.source}` : ''}${p.quote ? `\n  Quote: "${p.quote}"` : ''}${p.description ? `\n  Description: ${p.description}` : ''}`).join('\n')}
 
 PRINCIPLE CATEGORIES:
 ${Array.from(new Set(principles.map(p => p.category))).map(cat => `- ${cat}: ${principles.filter(p => p.category === cat).length} principles`).join('\n')}
@@ -163,10 +186,10 @@ FOCUS DATA
 FOCUS AREAS (${focusItems.length} total):
 
 MATTERS (${focusItems.filter(f => f.type === 'matters').length}):
-${focusItems.filter(f => f.type === 'matters').map(f => `- ${f.text} (${f.category})${f.source ? ` - Source: ${f.source}` : ''}`).join('\n')}
+${focusItems.filter(f => f.type === 'matters').map(f => `- ${f.text} (${f.category})${f.source ? ` - Source: ${f.source}` : ''}${f.description ? `\n  Description: ${f.description}` : ''}`).join('\n')}
 
 DOESN'T MATTER (${focusItems.filter(f => f.type === 'doesnt_matter').length}):
-${focusItems.filter(f => f.type === 'doesnt_matter').map(f => `- ${f.text} (${f.category})${f.source ? ` - Source: ${f.source}` : ''}`).join('\n')}
+${focusItems.filter(f => f.type === 'doesnt_matter').map(f => `- ${f.text} (${f.category})${f.source ? ` - Source: ${f.source}` : ''}${f.description ? `\n  Description: ${f.description}` : ''}`).join('\n')}
 
 FOCUS CATEGORIES:
 ${Array.from(new Set(focusItems.map(f => f.category))).map(cat => `- ${cat}: ${focusItems.filter(f => f.category === cat).length} items`).join('\n')}

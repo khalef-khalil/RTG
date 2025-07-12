@@ -10,6 +10,7 @@ interface FocusItem {
   category: string
   createdAt: Date
   source?: string
+  description?: string
 }
 
 const categories = [
@@ -31,13 +32,14 @@ export default function FocusManager() {
       const data = await response.json()
       
       if (response.ok && Array.isArray(data)) {
-        const formattedItems = data.map((item: { id: string; text: string; type: string; category: string; createdAt: string; source?: string }) => ({
+        const formattedItems = data.map((item: { id: string; text: string; type: string; category: string; createdAt: string; source?: string; description?: string }) => ({
           id: item.id,
           text: item.text,
           type: item.type as 'matters' | 'doesnt_matter',
           category: item.category,
           createdAt: new Date(item.createdAt),
-          source: item.source
+          source: item.source,
+          description: item.description
         }))
         setFocusItems(formattedItems)
       } else {
@@ -60,7 +62,8 @@ export default function FocusManager() {
     text: '',
     type: 'matters' as 'matters' | 'doesnt_matter',
     category: 'Other',
-    source: ''
+    source: '',
+    description: ''
   })
 
   const filteredItems = focusItems.filter(item => {
@@ -81,13 +84,14 @@ export default function FocusManager() {
             text: newFocusItem.text.trim(),
             type: newFocusItem.type,
             category: newFocusItem.category,
-            source: newFocusItem.source.trim() || null
+            source: newFocusItem.source.trim() || null,
+            description: newFocusItem.description.trim() || null
           })
         })
         
         if (response.ok) {
           await fetchFocusItems()
-          setNewFocusItem({ text: '', type: 'matters', category: 'Other', source: '' })
+          setNewFocusItem({ text: '', type: 'matters', category: 'Other', source: '', description: '' })
           setIsAdding(false)
         }
       } catch (error) {
@@ -96,7 +100,7 @@ export default function FocusManager() {
     }
   }
 
-  const handleEditFocusItem = async (id: string, updatedText: string) => {
+  const handleEditFocusItem = async (id: string, updatedData: Partial<FocusItem>) => {
     try {
       const item = focusItems.find(f => f.id === id)
       if (!item) return
@@ -107,10 +111,11 @@ export default function FocusManager() {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          text: updatedText,
-          type: item.type,
-          category: item.category,
-          source: item.source
+          text: updatedData.text || item.text,
+          type: updatedData.type || item.type,
+          category: updatedData.category || item.category,
+          source: updatedData.source || item.source,
+          description: updatedData.description || item.description
         })
       })
       
@@ -304,6 +309,14 @@ export default function FocusManager() {
               />
             </div>
 
+            <textarea
+              value={newFocusItem.description}
+              onChange={(e) => setNewFocusItem({ ...newFocusItem, description: e.target.value })}
+              placeholder="Description (optional) - Explain why this matters or doesn't matter..."
+              className="w-full p-3 rounded-lg bg-gray-700 text-white placeholder-gray-400 border border-gray-600 focus:outline-none focus:ring-2 focus:ring-cyan-500 resize-none"
+              rows={3}
+            />
+
             <div className="flex space-x-2">
               <button
                 onClick={handleAddFocusItem}
@@ -315,7 +328,7 @@ export default function FocusManager() {
               <button
                 onClick={() => {
                   setIsAdding(false)
-                  setNewFocusItem({ text: '', type: 'matters', category: 'Other', source: '' })
+                  setNewFocusItem({ text: '', type: 'matters', category: 'Other', source: '', description: '' })
                 }}
                 className="flex items-center space-x-2 px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white rounded-lg transition-colors"
               >
@@ -342,7 +355,7 @@ export default function FocusManager() {
                 key={item.id}
                 item={item}
                 isEditing={editingId === item.id}
-                onEdit={(text) => handleEditFocusItem(item.id, text)}
+                onEdit={(updatedData) => handleEditFocusItem(item.id, updatedData)}
                 onDelete={() => handleDeleteFocusItem(item.id)}
                 onStartEdit={() => setEditingId(item.id)}
                 onCancelEdit={() => setEditingId(null)}
@@ -362,7 +375,7 @@ export default function FocusManager() {
                 key={item.id}
                 item={item}
                 isEditing={editingId === item.id}
-                onEdit={(text) => handleEditFocusItem(item.id, text)}
+                onEdit={(updatedData) => handleEditFocusItem(item.id, updatedData)}
                 onDelete={() => handleDeleteFocusItem(item.id)}
                 onStartEdit={() => setEditingId(item.id)}
                 onCancelEdit={() => setEditingId(null)}
@@ -377,7 +390,7 @@ export default function FocusManager() {
               key={item.id}
               item={item}
               isEditing={editingId === item.id}
-              onEdit={(text) => handleEditFocusItem(item.id, text)}
+              onEdit={(updatedData) => handleEditFocusItem(item.id, updatedData)}
               onDelete={() => handleDeleteFocusItem(item.id)}
               onStartEdit={() => setEditingId(item.id)}
               onCancelEdit={() => setEditingId(null)}
@@ -398,18 +411,24 @@ export default function FocusManager() {
 interface FocusCardProps {
   item: FocusItem
   isEditing: boolean
-  onEdit: (text: string) => void
+  onEdit: (updatedData: Partial<FocusItem>) => void
   onDelete: () => void
   onStartEdit: () => void
   onCancelEdit: () => void
 }
 
 function FocusCard({ item, isEditing, onEdit, onDelete, onStartEdit, onCancelEdit }: FocusCardProps) {
-  const [editText, setEditText] = useState(item.text)
+  const [editData, setEditData] = useState({
+    text: item.text,
+    type: item.type,
+    category: item.category,
+    source: item.source || '',
+    description: item.description || ''
+  })
 
   const handleSave = () => {
-    if (editText.trim()) {
-      onEdit(editText.trim())
+    if (editData.text.trim()) {
+      onEdit(editData)
     }
   }
 
@@ -453,12 +472,68 @@ function FocusCard({ item, isEditing, onEdit, onDelete, onStartEdit, onCancelEdi
 
       {isEditing ? (
         <div className="space-y-3">
+          <div className="flex space-x-4">
+            <button
+              onClick={() => setEditData({ ...editData, type: 'matters' })}
+              className={`flex items-center space-x-2 px-3 py-1 rounded text-sm transition-colors ${
+                editData.type === 'matters' 
+                  ? 'bg-blue-600 text-white' 
+                  : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
+              }`}
+            >
+              <Zap size={14} />
+              <span>Matters</span>
+            </button>
+            <button
+              onClick={() => setEditData({ ...editData, type: 'doesnt_matter' })}
+              className={`flex items-center space-x-2 px-3 py-1 rounded text-sm transition-colors ${
+                editData.type === 'doesnt_matter' 
+                  ? 'bg-gray-600 text-white' 
+                  : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
+              }`}
+            >
+              <X size={14} />
+              <span>Doesn't Matter</span>
+            </button>
+          </div>
+
           <textarea
-            value={editText}
-            onChange={(e) => setEditText(e.target.value)}
+            value={editData.text}
+            onChange={(e) => setEditData({ ...editData, text: e.target.value })}
+            placeholder="Write your focus item here..."
             className="w-full p-2 rounded bg-gray-700 text-white border border-gray-600 focus:outline-none focus:ring-2 focus:ring-cyan-500 resize-none"
             rows={3}
           />
+
+          <div className="flex space-x-4">
+            <select
+              value={editData.category}
+              onChange={(e) => setEditData({ ...editData, category: e.target.value })}
+              className="px-3 py-2 rounded bg-gray-700 text-white border border-gray-600 focus:outline-none focus:ring-2 focus:ring-cyan-500 text-sm"
+            >
+              {categories.map(category => (
+                <option key={category} value={category} className="bg-gray-700 text-white">
+                  {category}
+                </option>
+              ))}
+            </select>
+
+            <input
+              value={editData.source}
+              onChange={(e) => setEditData({ ...editData, source: e.target.value })}
+              placeholder="Source (optional)"
+              className="flex-1 px-3 py-2 rounded bg-gray-700 text-white placeholder-gray-400 border border-gray-600 focus:outline-none focus:ring-2 focus:ring-cyan-500 text-sm"
+            />
+          </div>
+
+          <textarea
+            value={editData.description}
+            onChange={(e) => setEditData({ ...editData, description: e.target.value })}
+            placeholder="Description (optional) - Explain why this matters or doesn't matter..."
+            className="w-full p-2 rounded bg-gray-700 text-white placeholder-gray-400 border border-gray-600 focus:outline-none focus:ring-2 focus:ring-cyan-500 resize-none text-sm"
+            rows={3}
+          />
+
           <div className="flex space-x-2">
             <button
               onClick={handleSave}
@@ -469,7 +544,13 @@ function FocusCard({ item, isEditing, onEdit, onDelete, onStartEdit, onCancelEdi
             </button>
             <button
               onClick={() => {
-                setEditText(item.text)
+                setEditData({
+                  text: item.text,
+                  type: item.type,
+                  category: item.category,
+                  source: item.source || '',
+                  description: item.description || ''
+                })
                 onCancelEdit()
               }}
               className="flex items-center space-x-1 px-3 py-1 bg-gray-600 hover:bg-gray-700 text-white rounded text-sm transition-colors"
@@ -482,6 +563,11 @@ function FocusCard({ item, isEditing, onEdit, onDelete, onStartEdit, onCancelEdi
       ) : (
         <>
           <p className="text-white mb-3 leading-relaxed">{item.text}</p>
+          {item.description && (
+            <div className="mb-3 p-3 bg-gray-800/50 rounded-lg border border-gray-700">
+              <p className="text-gray-300 text-sm leading-relaxed">{item.description}</p>
+            </div>
+          )}
           <div className="flex items-center justify-between text-xs text-gray-400">
             <span>Added {item.createdAt.toLocaleDateString()}</span>
             {item.source && (

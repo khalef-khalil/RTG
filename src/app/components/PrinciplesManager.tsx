@@ -11,6 +11,7 @@ interface Principle {
   dateAdded: Date
   source?: string
   quote?: string
+  description?: string
 }
 
 const initialPrinciples: Principle[] = [
@@ -21,7 +22,8 @@ const initialPrinciples: Principle[] = [
     category: 'Productivity',
     dateAdded: new Date('2024-01-01'),
     source: 'Personal experience',
-    quote: 'The key is not to prioritize what\'s on your schedule, but to schedule your priorities.'
+    quote: 'The key is not to prioritize what\'s on your schedule, but to schedule your priorities.',
+    description: 'Begin each morning by writing down the three most important tasks that will move you toward your goals. This creates clarity and prevents getting overwhelmed by less important activities.'
   },
   {
     id: '2',
@@ -30,7 +32,8 @@ const initialPrinciples: Principle[] = [
     category: 'Communication',
     dateAdded: new Date('2024-01-02'),
     source: 'Dale Carnegie',
-    quote: 'Most people do not listen with the intent to understand; they listen with the intent to reply.'
+    quote: 'Most people do not listen with the intent to understand; they listen with the intent to reply.',
+    description: 'Practice active listening by focusing on understanding the other person\'s perspective rather than formulating your response. This builds stronger relationships and helps you learn from others.'
   },
   {
     id: '3',
@@ -39,7 +42,8 @@ const initialPrinciples: Principle[] = [
     category: 'Decision Making',
     dateAdded: new Date('2024-01-03'),
     source: 'Life lesson',
-    quote: 'When emotions run high, logic runs low.'
+    quote: 'When emotions run high, logic runs low.',
+    description: 'Emotions can cloud judgment and lead to poor decisions. Always wait until you\'re in a calm, rational state before making significant choices about relationships, career, or finances.'
   },
   {
     id: '4',
@@ -47,7 +51,8 @@ const initialPrinciples: Principle[] = [
     type: 'dont',
     category: 'Mental Health',
     dateAdded: new Date('2024-01-04'),
-    source: 'Psychology research'
+    source: 'Psychology research',
+    description: 'Social media shows curated highlights, not reality. Comparing your behind-the-scenes to others\' highlight reels leads to unnecessary stress and unrealistic expectations.'
   },
   {
     id: '5',
@@ -56,7 +61,8 @@ const initialPrinciples: Principle[] = [
     category: 'Growth',
     dateAdded: new Date('2024-01-05'),
     source: 'Warren Buffett',
-    quote: 'The best investment you can make is in yourself.'
+    quote: 'The best investment you can make is in yourself.',
+    description: 'Dedicate time and resources to developing your skills, knowledge, and personal growth. This compound interest on yourself pays the highest returns over time.'
   },
 ]
 
@@ -80,14 +86,15 @@ export default function PrinciplesManager() {
       
       if (response.ok && Array.isArray(data)) {
         // Convert API data to match our interface
-        const formattedPrinciples = data.map((p: { id: string; text: string; type: string; category: string; createdAt: string; source?: string; quote?: string }) => ({
+        const formattedPrinciples = data.map((p: { id: string; text: string; type: string; category: string; createdAt: string; source?: string; quote?: string; description?: string }) => ({
           id: p.id,
           text: p.text,
           type: p.type as 'do' | 'dont',
           category: p.category,
           dateAdded: new Date(p.createdAt),
           source: p.source,
-          quote: p.quote
+          quote: p.quote,
+          description: p.description
         }))
         setPrinciples(formattedPrinciples)
       } else {
@@ -110,7 +117,8 @@ export default function PrinciplesManager() {
     type: 'do' as 'do' | 'dont',
     category: 'Other',
     source: '',
-    quote: ''
+    quote: '',
+    description: ''
   })
 
   const filteredPrinciples = principles.filter(principle => {
@@ -132,13 +140,14 @@ export default function PrinciplesManager() {
             type: newPrinciple.type,
             category: newPrinciple.category,
             source: newPrinciple.source.trim() || null,
-            quote: newPrinciple.quote.trim() || null
+            quote: newPrinciple.quote.trim() || null,
+            description: newPrinciple.description.trim() || null
           })
         })
         
         if (response.ok) {
           await fetchPrinciples() // Refresh the list
-          setNewPrinciple({ text: '', type: 'do', category: 'Other', source: '', quote: '' })
+          setNewPrinciple({ text: '', type: 'do', category: 'Other', source: '', quote: '', description: '' })
           setIsAdding(false)
         }
       } catch (error) {
@@ -162,7 +171,8 @@ export default function PrinciplesManager() {
           type: updatedData.type || principle.type,
           category: updatedData.category || principle.category,
           source: updatedData.source || principle.source,
-          quote: updatedData.quote || principle.quote
+          quote: updatedData.quote || principle.quote,
+          description: updatedData.description || principle.description
         })
       })
       
@@ -364,6 +374,14 @@ export default function PrinciplesManager() {
               rows={2}
             />
 
+            <textarea
+              value={newPrinciple.description}
+              onChange={(e) => setNewPrinciple({ ...newPrinciple, description: e.target.value })}
+              placeholder="Description (optional) - Explain why this principle matters and how to apply it..."
+              className="w-full p-3 rounded-lg bg-gray-700 text-white placeholder-gray-400 border border-gray-600 focus:outline-none focus:ring-2 focus:ring-emerald-500 resize-none"
+              rows={3}
+            />
+
             <div className="flex space-x-2">
               <button
                 onClick={handleAddPrinciple}
@@ -375,7 +393,7 @@ export default function PrinciplesManager() {
               <button
                 onClick={() => {
                   setIsAdding(false)
-                  setNewPrinciple({ text: '', type: 'do', category: 'Other', source: '', quote: '' })
+                  setNewPrinciple({ text: '', type: 'do', category: 'Other', source: '', quote: '', description: '' })
                 }}
                 className="flex items-center space-x-2 px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white rounded-lg transition-colors"
               >
@@ -470,7 +488,8 @@ function PrincipleCard({ principle, isEditing, onEdit, onDelete, onStartEdit, on
     type: principle.type,
     category: principle.category,
     source: principle.source || '',
-    quote: principle.quote || ''
+    quote: principle.quote || '',
+    description: principle.description || ''
   })
 
   const handleSave = () => {
@@ -581,6 +600,14 @@ function PrincipleCard({ principle, isEditing, onEdit, onDelete, onStartEdit, on
             rows={2}
           />
 
+          <textarea
+            value={editData.description}
+            onChange={(e) => setEditData({ ...editData, description: e.target.value })}
+            placeholder="Description (optional) - Explain why this principle matters and how to apply it..."
+            className="w-full p-2 rounded bg-gray-700 text-white placeholder-gray-400 border border-gray-600 focus:outline-none focus:ring-2 focus:ring-emerald-500 resize-none text-sm"
+            rows={3}
+          />
+
           <div className="flex space-x-2">
             <button
               onClick={handleSave}
@@ -596,7 +623,8 @@ function PrincipleCard({ principle, isEditing, onEdit, onDelete, onStartEdit, on
                   type: principle.type,
                   category: principle.category,
                   source: principle.source || '',
-                  quote: principle.quote || ''
+                  quote: principle.quote || '',
+                  description: principle.description || ''
                 })
                 onCancelEdit()
               }}
@@ -614,6 +642,11 @@ function PrincipleCard({ principle, isEditing, onEdit, onDelete, onStartEdit, on
             <blockquote className="border-l-4 border-emerald-500/50 pl-4 mb-3">
               <p className="text-emerald-300 italic text-sm leading-relaxed">"{principle.quote}"</p>
             </blockquote>
+          )}
+          {principle.description && (
+            <div className="mb-3 p-3 bg-gray-800/50 rounded-lg border border-gray-700">
+              <p className="text-gray-300 text-sm leading-relaxed">{principle.description}</p>
+            </div>
           )}
           <div className="flex items-center justify-between text-xs text-gray-400">
             <span>Added {principle.dateAdded.toLocaleDateString()}</span>

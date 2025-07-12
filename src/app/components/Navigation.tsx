@@ -19,9 +19,9 @@ export default function Navigation() {
           
           <div className="flex space-x-1 navigation-links">
             <Link
-              href="/"
+              href="/challenges"
               className={`flex items-center space-x-2 px-4 py-2 rounded-lg transition-all duration-200 navigation-link ${
-                pathname === '/' 
+                pathname === '/challenges' 
                   ? 'bg-purple-600 text-white shadow-lg' 
                   : 'text-gray-300 hover:bg-white/10 hover:text-white'
               }`}

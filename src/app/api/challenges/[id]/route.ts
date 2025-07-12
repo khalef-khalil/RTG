@@ -21,6 +21,37 @@ export async function GET(
   }
 }
 
+export async function PUT(
+  request: Request,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  try {
+    const { id } = await params
+    const body = await request.json()
+    const { title, description, type, targetValue, deadline, timeLimit, priority, category, checklistItems } = body
+
+    const challenge = await db.challenge.update({
+      where: { id },
+      data: {
+        title: title ?? undefined,
+        description: description ?? undefined,
+        type: type ?? undefined,
+        targetValue: targetValue ?? undefined,
+        deadline: deadline ? new Date(deadline) : undefined,
+        timeLimit: timeLimit ?? undefined,
+        priority: priority ?? undefined,
+        category: category ?? undefined,
+        checklistItems: checklistItems ?? undefined
+      }
+    })
+
+    return NextResponse.json(challenge)
+  } catch (error) {
+    console.error('Error updating challenge:', error)
+    return NextResponse.json({ error: 'Failed to update challenge' }, { status: 500 })
+  }
+}
+
 export async function PATCH(
   request: Request,
   { params }: { params: Promise<{ id: string }> }

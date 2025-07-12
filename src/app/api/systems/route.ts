@@ -30,7 +30,8 @@ export async function POST(request: Request) {
         action: body.action,
         outcome: body.outcome,
         category: body.category,
-        source: body.source
+        source: body.source,
+        description: body.description
       })
       .select()
       .single()

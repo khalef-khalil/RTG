@@ -55,6 +55,7 @@ interface System {
   outcome: string
   category: string
   source?: string
+  description?: string
   createdAt: string
   updatedAt: string
 }
@@ -202,7 +203,7 @@ AUTOMATED SYSTEMS (${systems.length} total):
 ${systems.map(s => `- TRIGGER: ${s.trigger}
   ACTION: ${s.action}
   OUTCOME: ${s.outcome}
-  Category: ${s.category}${s.source ? ` - Source: ${s.source}` : ''}
+  Category: ${s.category}${s.source ? ` - Source: ${s.source}` : ''}${s.description ? `\n  Description: ${s.description}` : ''}
 `).join('\n')}
 
 SYSTEM CATEGORIES:

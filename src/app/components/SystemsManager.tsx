@@ -11,6 +11,7 @@ interface SystemItem {
   category: string
   createdAt: Date
   source?: string
+  description?: string
 }
 
 const categories = [
@@ -32,14 +33,15 @@ export default function SystemsManager() {
       const data = await response.json()
       
       if (response.ok && Array.isArray(data)) {
-        const formattedSystems = data.map((system: { id: string; trigger: string; action: string; outcome: string; category: string; createdAt: string; source?: string }) => ({
+        const formattedSystems = data.map((system: { id: string; trigger: string; action: string; outcome: string; category: string; createdAt: string; source?: string; description?: string }) => ({
           id: system.id,
           trigger: system.trigger,
           action: system.action,
           outcome: system.outcome,
           category: system.category,
           createdAt: new Date(system.createdAt),
-          source: system.source
+          source: system.source,
+          description: system.description
         }))
         setSystems(formattedSystems)
       } else {
@@ -62,7 +64,8 @@ export default function SystemsManager() {
     action: '',
     outcome: '',
     category: 'Other',
-    source: ''
+    source: '',
+    description: ''
   })
 
   const filteredSystems = systems.filter(system => {
@@ -83,13 +86,14 @@ export default function SystemsManager() {
             action: newSystem.action.trim(),
             outcome: newSystem.outcome.trim(),
             category: newSystem.category,
-            source: newSystem.source.trim() || null
+            source: newSystem.source.trim() || null,
+            description: newSystem.description.trim() || null
           })
         })
         
         if (response.ok) {
           await fetchSystems()
-          setNewSystem({ trigger: '', action: '', outcome: '', category: 'Other', source: '' })
+          setNewSystem({ trigger: '', action: '', outcome: '', category: 'Other', source: '', description: '' })
           setIsAdding(false)
         }
       } catch (error) {
@@ -112,8 +116,9 @@ export default function SystemsManager() {
           trigger: updatedData.trigger || system.trigger,
           action: updatedData.action || system.action,
           outcome: updatedData.outcome || system.outcome,
-          category: system.category,
-          source: system.source
+          category: updatedData.category || system.category,
+          source: updatedData.source || system.source,
+          description: updatedData.description || system.description
         })
       })
       
@@ -298,6 +303,14 @@ export default function SystemsManager() {
                 />
               </div>
 
+              <textarea
+                value={newSystem.description}
+                onChange={(e) => setNewSystem({ ...newSystem, description: e.target.value })}
+                placeholder="Description (optional) - Explain why this system is important and how it helps..."
+                className="w-full p-3 rounded-lg bg-gray-700 text-white placeholder-gray-400 border border-gray-600 focus:outline-none focus:ring-2 focus:ring-amber-500 resize-none"
+                rows={3}
+              />
+
               <div className="flex space-x-2">
                 <button
                   onClick={handleAddSystem}
@@ -307,10 +320,10 @@ export default function SystemsManager() {
                   <span>Create System</span>
                 </button>
                 <button
-                  onClick={() => {
-                    setIsAdding(false)
-                    setNewSystem({ trigger: '', action: '', outcome: '', category: 'Other', source: '' })
-                  }}
+                                  onClick={() => {
+                  setIsAdding(false)
+                  setNewSystem({ trigger: '', action: '', outcome: '', category: 'Other', source: '', description: '' })
+                }}
                   className="flex items-center space-x-2 px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white rounded-lg transition-colors"
                 >
                   <X size={16} />
@@ -366,7 +379,10 @@ function SystemCard({
   const [editData, setEditData] = useState({
     trigger: system.trigger,
     action: system.action,
-    outcome: system.outcome
+    outcome: system.outcome,
+    category: system.category,
+    source: system.source || '',
+    description: system.description || ''
   })
 
   const handleSave = () => {
@@ -427,6 +443,33 @@ function SystemCard({
               className="w-full p-2 rounded bg-gray-700 text-white border border-gray-600 focus:outline-none focus:ring-2 focus:ring-amber-500"
             />
           </div>
+          <div className="flex space-x-4">
+            <select
+              value={editData.category}
+              onChange={(e) => setEditData({ ...editData, category: e.target.value })}
+              className="px-3 py-2 rounded bg-gray-700 text-white border border-gray-600 focus:outline-none focus:ring-2 focus:ring-amber-500 text-sm"
+            >
+              {categories.map(category => (
+                <option key={category} value={category} className="bg-gray-700 text-white">
+                  {category}
+                </option>
+              ))}
+            </select>
+
+            <input
+              value={editData.source}
+              onChange={(e) => setEditData({ ...editData, source: e.target.value })}
+              placeholder="Source (optional)"
+              className="flex-1 px-3 py-2 rounded bg-gray-700 text-white placeholder-gray-400 border border-gray-600 focus:outline-none focus:ring-2 focus:ring-amber-500 text-sm"
+            />
+          </div>
+          <textarea
+            value={editData.description}
+            onChange={(e) => setEditData({ ...editData, description: e.target.value })}
+            placeholder="Description (optional) - Explain why this system is important..."
+            className="w-full p-2 rounded bg-gray-700 text-white placeholder-gray-400 border border-gray-600 focus:outline-none focus:ring-2 focus:ring-amber-500 resize-none text-sm"
+            rows={3}
+          />
           <div className="flex space-x-2">
             <button
               onClick={handleSave}
@@ -437,7 +480,14 @@ function SystemCard({
             </button>
             <button
               onClick={() => {
-                setEditData({ trigger: system.trigger, action: system.action, outcome: system.outcome })
+                setEditData({ 
+                  trigger: system.trigger, 
+                  action: system.action, 
+                  outcome: system.outcome,
+                  category: system.category,
+                  source: system.source || '',
+                  description: system.description || ''
+                })
                 onCancelEdit()
               }}
               className="flex items-center space-x-1 px-3 py-1 bg-gray-600 hover:bg-gray-700 text-white rounded text-sm transition-colors"
@@ -465,6 +515,12 @@ function SystemCard({
               <p className="text-white text-sm">{system.outcome}</p>
             </div>
           </div>
+
+          {system.description && (
+            <div className="mb-4 p-3 bg-gray-800/50 rounded-lg border border-gray-700">
+              <p className="text-gray-300 text-sm leading-relaxed">{system.description}</p>
+            </div>
+          )}
 
           <div className="flex items-center justify-between text-xs text-gray-400">
             <span>Added {system.createdAt.toLocaleDateString()}</span>

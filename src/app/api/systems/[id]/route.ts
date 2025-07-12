@@ -12,7 +12,8 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
         action: body.action,
         outcome: body.outcome,
         category: body.category,
-        source: body.source
+        source: body.source,
+        description: body.description
       })
       .eq('id', id)
       .select()

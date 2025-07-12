@@ -131,23 +131,45 @@ export default function ChallengesManager() {
     }
   }
 
-  const handleCompleteChallenge = async (id: string) => {
-    try {
-      const challenge = challenges.find(c => c.id === id)
-      if (!challenge) return
+  const [completingChallenge, setCompletingChallenge] = useState<Challenge | null>(null)
+  const [completionData, setCompletionData] = useState({
+    biggestObstacle: '',
+    improvement: '',
+    pushRating: 3
+  })
 
-      const response = await fetch(`/api/challenges/${id}`, {
+  const handleCompleteChallenge = async (id: string) => {
+    const challenge = challenges.find(c => c.id === id)
+    if (!challenge) return
+    
+    setCompletingChallenge(challenge)
+    setCompletionData({
+      biggestObstacle: '',
+      improvement: '',
+      pushRating: 3
+    })
+  }
+
+  const handleSubmitCompletion = async () => {
+    if (!completingChallenge) return
+
+    try {
+      const response = await fetch(`/api/challenges/${completingChallenge.id}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ 
           completed: true, 
-          progress: challenge.targetValue || challenge.progress,
-          completedAt: new Date().toISOString()
+          progress: completingChallenge.targetValue || completingChallenge.progress,
+          completedAt: new Date().toISOString(),
+          biggestObstacle: completionData.biggestObstacle.trim() || null,
+          improvement: completionData.improvement.trim() || null,
+          pushRating: completionData.pushRating
         })
       })
 
       if (response.ok) {
         await fetchChallenges()
+        setCompletingChallenge(null)
       }
     } catch (error) {
       console.error('Failed to complete challenge:', error)
@@ -481,6 +503,97 @@ export default function ChallengesManager() {
       {sortedChallenges.length === 0 && (
         <div className="text-center py-12">
           <p className="text-gray-400">No challenges found matching your filters.</p>
+        </div>
+      )}
+
+      {/* Completion Modal */}
+      {completingChallenge && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-gray-800 rounded-lg max-w-md w-full border border-gray-700">
+            <div className="p-6">
+              <div className="flex justify-between items-center mb-6">
+                <h2 className="text-xl font-semibold text-white">Challenge Complete! 🎉</h2>
+                <button
+                  onClick={() => setCompletingChallenge(null)}
+                  className="text-gray-400 hover:text-white transition-colors"
+                >
+                  <X size={20} />
+                </button>
+              </div>
+
+              <div className="space-y-4">
+                <div>
+                  <h3 className="text-lg font-medium text-white mb-2">{completingChallenge.title}</h3>
+                  <p className="text-gray-300 text-sm mb-4">Let's capture some quick insights about this challenge:</p>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-300 mb-2">
+                    What was the biggest obstacle? (3-4 words)
+                  </label>
+                  <input
+                    type="text"
+                    value={completionData.biggestObstacle}
+                    onChange={(e) => setCompletionData({ ...completionData, biggestObstacle: e.target.value })}
+                    placeholder="e.g., time management, motivation, distractions"
+                    className="w-full px-3 py-2 rounded-lg bg-gray-700 text-white placeholder-gray-400 border border-gray-600 focus:outline-none focus:ring-2 focus:ring-purple-500"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-300 mb-2">
+                    What would you do differently? (one sentence)
+                  </label>
+                  <input
+                    type="text"
+                    value={completionData.improvement}
+                    onChange={(e) => setCompletionData({ ...completionData, improvement: e.target.value })}
+                    placeholder="e.g., Start earlier in the day, break it into smaller steps"
+                    className="w-full px-3 py-2 rounded-lg bg-gray-700 text-white placeholder-gray-400 border border-gray-600 focus:outline-none focus:ring-2 focus:ring-purple-500"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-300 mb-2">
+                    How much did this push you? (1-5 scale)
+                  </label>
+                  <div className="flex space-x-2">
+                    {[1, 2, 3, 4, 5].map(rating => (
+                      <button
+                        key={rating}
+                        onClick={() => setCompletionData({ ...completionData, pushRating: rating })}
+                        className={`w-10 h-10 rounded-full border-2 transition-colors ${
+                          completionData.pushRating === rating
+                            ? 'bg-purple-600 border-purple-600 text-white'
+                            : 'border-gray-600 text-gray-400 hover:border-gray-500'
+                        }`}
+                      >
+                        {rating}
+                      </button>
+                    ))}
+                  </div>
+                  <p className="text-xs text-gray-400 mt-1">
+                    1 = Easy • 5 = Really pushed my limits
+                  </p>
+                </div>
+
+                <div className="flex space-x-2 pt-4">
+                  <button
+                    onClick={handleSubmitCompletion}
+                    className="flex-1 bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg transition-colors"
+                  >
+                    Complete Challenge
+                  </button>
+                  <button
+                    onClick={() => setCompletingChallenge(null)}
+                    className="px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white rounded-lg transition-colors"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
       )}
     </div>

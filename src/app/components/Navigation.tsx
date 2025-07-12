@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { Target, BookOpen } from 'lucide-react'
+import { Target, BookOpen, Zap } from 'lucide-react'
 
 export default function Navigation() {
   const pathname = usePathname()
@@ -28,6 +28,18 @@ export default function Navigation() {
             >
               <Target size={20} />
               <span>Challenges</span>
+            </Link>
+            
+            <Link
+              href="/focus"
+              className={`flex items-center space-x-2 px-4 py-2 rounded-lg transition-all duration-200 navigation-link ${
+                pathname === '/focus' 
+                  ? 'bg-purple-600 text-white shadow-lg' 
+                  : 'text-gray-300 hover:bg-white/10 hover:text-white'
+              }`}
+            >
+              <Zap size={20} />
+              <span>Focus</span>
             </Link>
             
             <Link

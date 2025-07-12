@@ -27,6 +27,11 @@ model Challenge {
   completedAt     DateTime?
   progress        Int      @default(0) // Current progress
   
+  // Completion reflection
+  biggestObstacle String?  // What was the biggest obstacle (tags)
+  improvement     String?  // What would you do differently
+  pushRating      Int?     // How much did this push you (1-5 scale)
+  
   // Checklist items (JSON array for checklist type)
   checklistItems  String?  // JSON string of checklist items
   
@@ -50,4 +55,16 @@ model Principle {
   updatedAt   DateTime @updatedAt
   
   @@map("principles")
+}
+
+model Focus {
+  id          String   @id @default(cuid())
+  text        String
+  type        String   // "matters" or "doesnt_matter"
+  category    String
+  source      String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  @@map("focus")
 }

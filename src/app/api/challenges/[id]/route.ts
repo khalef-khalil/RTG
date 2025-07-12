@@ -59,14 +59,17 @@ export async function PATCH(
   try {
     const { id } = await params
     const body = await request.json()
-    const { completed, progress, completedAt } = body
+    const { completed, progress, completedAt, biggestObstacle, improvement, pushRating } = body
 
     const challenge = await db.challenge.update({
       where: { id },
       data: {
         completed: completed ?? undefined,
         progress: progress ?? undefined,
-        completedAt: completed ? new Date(completedAt || Date.now()) : undefined
+        completedAt: completed ? new Date(completedAt || Date.now()) : undefined,
+        biggestObstacle: biggestObstacle ?? undefined,
+        improvement: improvement ?? undefined,
+        pushRating: pushRating ?? undefined
       }
     })
 

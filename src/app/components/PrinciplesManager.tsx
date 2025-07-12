@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { Plus, Trash2, Edit3, Check, X, ThumbsUp, ThumbsDown } from 'lucide-react'
+import { Plus, Trash2, Edit3, Check, X, ThumbsUp, ThumbsDown, Loader2 } from 'lucide-react'
 
 interface Principle {
   id: string
@@ -10,6 +10,7 @@ interface Principle {
   category: string
   dateAdded: Date
   source?: string
+  quote?: string
 }
 
 const initialPrinciples: Principle[] = [
@@ -19,7 +20,8 @@ const initialPrinciples: Principle[] = [
     type: 'do',
     category: 'Productivity',
     dateAdded: new Date('2024-01-01'),
-    source: 'Personal experience'
+    source: 'Personal experience',
+    quote: 'The key is not to prioritize what\'s on your schedule, but to schedule your priorities.'
   },
   {
     id: '2',
@@ -27,7 +29,8 @@ const initialPrinciples: Principle[] = [
     type: 'do',
     category: 'Communication',
     dateAdded: new Date('2024-01-02'),
-    source: 'Dale Carnegie'
+    source: 'Dale Carnegie',
+    quote: 'Most people do not listen with the intent to understand; they listen with the intent to reply.'
   },
   {
     id: '3',
@@ -35,7 +38,8 @@ const initialPrinciples: Principle[] = [
     type: 'dont',
     category: 'Decision Making',
     dateAdded: new Date('2024-01-03'),
-    source: 'Life lesson'
+    source: 'Life lesson',
+    quote: 'When emotions run high, logic runs low.'
   },
   {
     id: '4',
@@ -51,7 +55,8 @@ const initialPrinciples: Principle[] = [
     type: 'do',
     category: 'Growth',
     dateAdded: new Date('2024-01-05'),
-    source: 'Warren Buffett'
+    source: 'Warren Buffett',
+    quote: 'The best investment you can make is in yourself.'
   },
 ]
 
@@ -75,13 +80,14 @@ export default function PrinciplesManager() {
       
       if (response.ok && Array.isArray(data)) {
         // Convert API data to match our interface
-        const formattedPrinciples = data.map((p: { id: string; text: string; type: string; category: string; createdAt: string; source?: string }) => ({
+        const formattedPrinciples = data.map((p: { id: string; text: string; type: string; category: string; createdAt: string; source?: string; quote?: string }) => ({
           id: p.id,
           text: p.text,
           type: p.type as 'do' | 'dont',
           category: p.category,
           dateAdded: new Date(p.createdAt),
-          source: p.source
+          source: p.source,
+          quote: p.quote
         }))
         setPrinciples(formattedPrinciples)
       } else {
@@ -103,7 +109,8 @@ export default function PrinciplesManager() {
     text: '',
     type: 'do' as 'do' | 'dont',
     category: 'Other',
-    source: ''
+    source: '',
+    quote: ''
   })
 
   const filteredPrinciples = principles.filter(principle => {
@@ -124,13 +131,14 @@ export default function PrinciplesManager() {
             text: newPrinciple.text.trim(),
             type: newPrinciple.type,
             category: newPrinciple.category,
-            source: newPrinciple.source.trim() || null
+            source: newPrinciple.source.trim() || null,
+            quote: newPrinciple.quote.trim() || null
           })
         })
         
         if (response.ok) {
           await fetchPrinciples() // Refresh the list
-          setNewPrinciple({ text: '', type: 'do', category: 'Other', source: '' })
+          setNewPrinciple({ text: '', type: 'do', category: 'Other', source: '', quote: '' })
           setIsAdding(false)
         }
       } catch (error) {
@@ -153,7 +161,8 @@ export default function PrinciplesManager() {
           text: updatedText,
           type: principle.type,
           category: principle.category,
-          source: principle.source
+          source: principle.source,
+          quote: principle.quote
         })
       })
       
@@ -186,7 +195,10 @@ export default function PrinciplesManager() {
   if (loading) {
     return (
       <div className="max-w-6xl mx-auto p-6 flex items-center justify-center min-h-screen">
-        <div className="text-white text-lg">Loading principles...</div>
+        <div className="flex items-center space-x-3">
+          <Loader2 size={24} className="animate-spin text-emerald-400" />
+          <span className="text-white text-lg">Loading principles...</span>
+        </div>
       </div>
     )
   }
@@ -344,6 +356,14 @@ export default function PrinciplesManager() {
               />
             </div>
 
+            <textarea
+              value={newPrinciple.quote}
+              onChange={(e) => setNewPrinciple({ ...newPrinciple, quote: e.target.value })}
+              placeholder="Quote (optional) - Add a relevant quote that supports this principle..."
+              className="w-full p-3 rounded-lg bg-gray-700 text-white placeholder-gray-400 border border-gray-600 focus:outline-none focus:ring-2 focus:ring-emerald-500 resize-none"
+              rows={2}
+            />
+
             <div className="flex space-x-2">
               <button
                 onClick={handleAddPrinciple}
@@ -355,7 +375,7 @@ export default function PrinciplesManager() {
               <button
                 onClick={() => {
                   setIsAdding(false)
-                  setNewPrinciple({ text: '', type: 'do', category: 'Other', source: '' })
+                  setNewPrinciple({ text: '', type: 'do', category: 'Other', source: '', quote: '' })
                 }}
                 className="flex items-center space-x-2 px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white rounded-lg transition-colors"
               >
@@ -522,6 +542,11 @@ function PrincipleCard({ principle, isEditing, onEdit, onDelete, onStartEdit, on
       ) : (
         <>
           <p className="text-white mb-3 leading-relaxed">{principle.text}</p>
+          {principle.quote && (
+            <blockquote className="border-l-4 border-emerald-500/50 pl-4 mb-3">
+              <p className="text-emerald-300 italic text-sm leading-relaxed">"{principle.quote}"</p>
+            </blockquote>
+          )}
           <div className="flex items-center justify-between text-xs text-gray-400">
             <span>Added {principle.dateAdded.toLocaleDateString()}</span>
             {principle.source && (

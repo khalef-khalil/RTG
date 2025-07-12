@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { Plus, Trash2, Edit3, Check, X, ArrowRight, Settings } from 'lucide-react'
+import { Plus, Trash2, Edit3, Check, X, ArrowRight, Settings, Loader2 } from 'lucide-react'
 
 interface SystemItem {
   id: string
@@ -145,7 +145,10 @@ export default function SystemsManager() {
   if (loading) {
     return (
       <div className="max-w-6xl mx-auto p-6 flex items-center justify-center min-h-screen">
-        <div className="text-white text-lg">Loading systems...</div>
+        <div className="flex items-center space-x-3">
+          <Loader2 size={24} className="animate-spin text-amber-400" />
+          <span className="text-white text-lg">Loading systems...</span>
+        </div>
       </div>
     )
   }

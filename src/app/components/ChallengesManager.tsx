@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { Plus, Trash2, Edit3, Check, X, Calendar, Clock, Target } from 'lucide-react'
+import { Plus, Trash2, Edit3, Check, X, Calendar, Clock, Target, Loader2 } from 'lucide-react'
 
 interface Challenge {
   id: string
@@ -30,6 +30,7 @@ export default function ChallengesManager() {
   const [categoryFilter, setCategoryFilter] = useState<string>('all')
   const [priorityFilter, setPriorityFilter] = useState<string>('all')
   const [isAdding, setIsAdding] = useState(false)
+  const [isSubmitting, setIsSubmitting] = useState(false)
   const [editingId, setEditingId] = useState<string | null>(null)
   const [newChallenge, setNewChallenge] = useState({
     title: '',
@@ -67,7 +68,8 @@ export default function ChallengesManager() {
   }
 
   const handleAddChallenge = async () => {
-    if (newChallenge.title.trim() && newChallenge.description.trim()) {
+    if (newChallenge.title.trim() && newChallenge.description.trim() && !isSubmitting) {
+      setIsSubmitting(true)
       try {
         const payload = {
           ...newChallenge,
@@ -101,6 +103,8 @@ export default function ChallengesManager() {
         }
       } catch (error) {
         console.error('Error creating challenge:', error)
+      } finally {
+        setIsSubmitting(false)
       }
     }
   }
@@ -243,7 +247,10 @@ export default function ChallengesManager() {
   if (loading) {
     return (
       <div className="max-w-6xl mx-auto p-6 flex items-center justify-center min-h-screen">
-        <div className="text-white text-lg">Loading challenges...</div>
+        <div className="flex items-center space-x-3">
+          <Loader2 size={24} className="animate-spin text-purple-400" />
+          <span className="text-white text-lg">Loading challenges...</span>
+        </div>
       </div>
     )
   }
@@ -458,10 +465,20 @@ export default function ChallengesManager() {
             <div className="flex space-x-2">
               <button
                 onClick={handleAddChallenge}
-                className="flex items-center space-x-2 px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg transition-colors"
+                disabled={isSubmitting}
+                className="flex items-center space-x-2 px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                <Check size={16} />
-                <span>Add Challenge</span>
+                {isSubmitting ? (
+                  <>
+                    <Loader2 size={16} className="animate-spin" />
+                    <span>Adding...</span>
+                  </>
+                ) : (
+                  <>
+                    <Check size={16} />
+                    <span>Add Challenge</span>
+                  </>
+                )}
               </button>
               <button
                 onClick={() => {
@@ -637,13 +654,96 @@ function ChallengeCard({
     description: challenge.description
   })
 
+  // Parse checklist items and track checked state
+  const [checklistItems, setChecklistItems] = useState<string[]>(() => {
+    if (challenge.type === 'checklist' && challenge.checklistItems) {
+      const items = JSON.parse(challenge.checklistItems)
+      // Handle both old format (array of strings) and new format (array of objects)
+      if (Array.isArray(items)) {
+        if (items.length > 0 && typeof items[0] === 'object' && 'text' in items[0]) {
+          // New format: array of objects with text and checked properties
+          return items.map((item: any) => item.text)
+        } else {
+          // Old format: array of strings
+          return items
+        }
+      }
+    }
+    return []
+  })
+  
+  // Initialize checked items based on progress
+  const [checkedItems, setCheckedItems] = useState<boolean[]>(() => {
+    if (challenge.type === 'checklist' && challenge.checklistItems) {
+      const items = JSON.parse(challenge.checklistItems)
+      // Handle both old format (array of strings) and new format (array of objects)
+      if (Array.isArray(items)) {
+        if (items.length > 0 && typeof items[0] === 'object' && 'text' in items[0]) {
+          // New format: array of objects with text and checked properties
+          return items.map((item: any) => item.checked || false)
+        } else {
+          // Old format: array of strings
+          return items.map((_: string, index: number) => index < challenge.progress)
+        }
+      }
+    }
+    return []
+  })
+
+  // Update checked items when challenge changes
+  useEffect(() => {
+    if (challenge.type === 'checklist' && challenge.checklistItems) {
+      const items = JSON.parse(challenge.checklistItems)
+      
+      // Handle both old format (array of strings) and new format (array of objects)
+      if (Array.isArray(items)) {
+        if (items.length > 0 && typeof items[0] === 'object' && 'text' in items[0]) {
+          // New format: array of objects with text and checked properties
+          setChecklistItems(items.map((item: any) => item.text))
+          setCheckedItems(items.map((item: any) => item.checked || false))
+        } else {
+          // Old format: array of strings
+          setChecklistItems(items)
+          setCheckedItems(items.map((_: string, index: number) => index < challenge.progress))
+        }
+      }
+    } else {
+      // Reset if no checklist items
+      setChecklistItems([])
+      setCheckedItems([])
+    }
+  }, [challenge.checklistItems, challenge.type, challenge.progress])
+
+  const handleChecklistItemChange = (index: number, checked: boolean) => {
+    const newCheckedItems = [...checkedItems]
+    newCheckedItems[index] = checked
+    setCheckedItems(newCheckedItems)
+    
+    // Update progress based on checked items
+    const newProgress = newCheckedItems.filter(item => item).length
+    
+    // Create updated checklist items with checked state
+    const updatedChecklistItems = checklistItems.map((item: string, i: number) => ({
+      text: item,
+      checked: newCheckedItems[i] || false
+    }))
+    
+    onEdit({ 
+      progress: newProgress,
+      checklistItems: JSON.stringify(updatedChecklistItems)
+    })
+  }
+
   const handleSave = () => {
     if (editData.title.trim() && editData.description.trim()) {
       onEdit(editData)
     }
   }
 
-  const progressPercentage = getProgressPercentage(challenge)
+  // Calculate progress percentage based on current checked items for checklist type
+  const progressPercentage = challenge.type === 'checklist' 
+    ? Math.round((checkedItems.filter(item => item).length / checklistItems.length) * 100)
+    : getProgressPercentage(challenge)
 
   return (
     <div className={`p-4 rounded-lg border transition-all duration-200 ${
@@ -751,6 +851,28 @@ function ChallengeCard({
                   className="bg-purple-600 h-2 rounded-full transition-all duration-300"
                   style={{ width: `${progressPercentage}%` }}
                 />
+              </div>
+            </div>
+          )}
+
+          {/* Checklist Items */}
+          {challenge.type === 'checklist' && checklistItems.length > 0 && (
+            <div className="mb-3">
+              <div className="text-sm text-gray-400 mb-2">Checklist Items:</div>
+              <div className="space-y-2">
+                {checklistItems.map((item: string, index: number) => (
+                  <label key={index} className="flex items-center space-x-2 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={checkedItems[index] || false}
+                      onChange={(e) => handleChecklistItemChange(index, e.target.checked)}
+                      className="w-4 h-4 text-purple-600 bg-gray-700 border-gray-600 rounded focus:ring-purple-500 focus:ring-2"
+                    />
+                    <span className={`text-sm ${checkedItems[index] ? 'line-through text-gray-500' : 'text-gray-300'}`}>
+                      {item}
+                    </span>
+                  </label>
+                ))}
               </div>
             </div>
           )}
